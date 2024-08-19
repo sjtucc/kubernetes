@@ -1,0 +1,37 @@
+--------------------------------------postman调用apiserver准备
+
+kubectl create sa forpostman
+
+touch postman-sa-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+    name: postman-sa-secret
+    annotations:
+        kubernetes.io/service-account.name: forpostman
+type: kubernetes.io/service-account-token
+
+kubectl create rolebinding forpostmanrolebinding --clusterrole cluster-admin --serviceaccount default:forpostman
+
+
+--------------------------------------新建pod脚本
+
+touch nginx-demo.yaml
+apiVersion: v1 # api 文档版本
+kind: Pod  # 资源对象类型，也可以配置为像Deployment、StatefulSet这一类的对象
+metadata: # Pod 相关的元数据，用于描述 Pod 的数据
+  name: nginx-demo # Pod 的名称
+  labels: # 定义 Pod 的标签
+    type: app # 自定义 label 标签，名字为 type，值为 app
+    test: 1.0.0 # 自定义 label 标签，描述 Pod 版本号
+spec: # 期望 Pod 按照这里面的描述进行创建
+  containers: # 对于 Pod 中的容器描述
+  - name: nginx # 容器的名称
+    image: nginx:1.7.9 # 指定容器的镜像
+    imagePullPolicy: IfNotPresent # 镜像拉取策略，指定如果本地有就用本地的，如果没有就拉取远程的
+    ports:
+    - name: nginx-port # 端口名称
+      containerPort: 80 # 描述容器内要暴露什么端口
+      protocol: TCP # 描述该端口是基于哪种协议通信的
+
+kubectl create -f nginx-demo.yaml
